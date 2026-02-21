@@ -11,6 +11,9 @@
 ### ✅ Implemented Features
 
 > _Features will be added here as Use Cases are implemented._
+- **UC1 – Feet Equality**
+  - Implements value-based equality for feet measurements using an overridden `equals()` method.
+  - Establishes object equality semantics as the foundation for future unit comparisons.
 
 ### 🧰 Tech Stack
 
@@ -43,14 +46,14 @@
   │   │       └── 📁 com
   │   │           └── 📁 apps
   │   │               └── 📁 quantitymeasurement
-  │   │                   └── 📄 (application classes will be added)
+  │   │                   └── 📄 QuantityMeasurementApp.java
   │   │
   │   └── 📁 test
   │       └── 📁 java
   │           └── 📁 com
   │               └── 📁 apps
   │                   └── 📁 quantitymeasurement
-  │                       └── 📄 (test classes will be added)
+  │                       └── 📄 QuantityMeasurementAppTest.java
   │
   ├── ⚙️ pom.xml
   ├── 🚫 .gitignore
