@@ -11,6 +11,7 @@
 ### ✅ Implemented Features
 
 > _Features will be added here as Use Cases are implemented._
+
 - 🧩 **UC1 – Feet Equality :**
   - Implements value-based equality for feet measurements using an overridden `equals()` method.
   - Establishes object equality semantics as the foundation for future unit comparisons.
@@ -70,25 +71,32 @@
   - Prevents unsupported arithmetic operations (addition, subtraction, division) through explicit validation and meaningful exceptions.
   - Demonstrates Interface Segregation and capability-based design while preserving backward compatibility for length, weight, and volume.
 
+- 🧩 **UC15 – N-Tier Architecture Refactoring :**
+  - Refactors the Quantity Measurement Application from a monolithic design into a structured **N-Tier architecture**.
+  - Introduces layered separation including **Controller, Service, Repository, Model, Entity, DTO, Interfaces, and Units** packages.
+  - Moves business logic into the **Service layer**, while the **Controller layer** manages application interaction and orchestration.
+  - Adds a **Repository layer with a cache-based storage implementation** to record measurement operations.
+  - Standardizes data flow using **QuantityDTO for external transfer**, **QuantityModel for internal processing**, and **QuantityMeasurementEntity for persistence**.
+  - Improves **modularity, testability, maintainability, and extensibility**, preparing the system for future integration with **REST APIs or database storage**.
+
 ### 🧰 Tech Stack
 
-- **Java 17+** — core language and application development  
-- **Maven** — build automation and dependency management  
+- **Java 17+** — core language and application development
+- **Maven** — build automation and dependency management
 - **JUnit 5** — unit testing framework supporting TDD workflow
 
 ### ▶️ Build / Run
 
- - Build the project:
-  
-    ```
-    mvn clean install
-    ```
+- Build the project:
+
+  ```
+  mvn clean install
+  ```
 
 - Run tests:
-    
-    ```
-    mvn test
-    ```
+  ```
+  mvn test
+  ```
 
 ### 📂 Project Structure
 
@@ -101,31 +109,82 @@
   │   │       └── 📁 com
   │   │           └── 📁 apps
   │   │               └── 📁 quantitymeasurement
-  │   │                   ├── 📄 IMeasurable.java
-  │   │                   ├── 📄 Quantity.java
-  │   │                   ├── 📄 LengthUnit.java
-  │   │                   ├── 📄 WeightUnit.java
-  │   │                   ├── 📄 VolumeUnit.java
-  │   │                   ├── 📄 TemperatureUnit.java
-  │   │                   ├── 📄 SupportsArithmetic.java
+  │   │                   ├── 📁 controller
+  │   │                   │   └── 📄 QuantityMeasurementController
+  │   │                   │
+  │   │                   ├── 📁 dto
+  │   │                   │   └── 📄 QuantityDTO
+  │   │                   │
+  │   │                   ├── 📁 entity
+  │   │                   │   └── 📄 QuantityMeasurementEntity.java
+  │   │                   │
+  │   │                   ├── 📁 exception
+  │   │                   │   └── 📄 QuantityMeasurementException.java
+  │   │                   │
+  │   │                   ├── 📁 interfaces
+  │   │                   │   ├── 📄 IMeasurable.java
+  │   │                   │   └── 📄 SupportsArithmetic.java
+  │   │                   │
+  │   │                   ├── 📁 model
+  │   │                   │   ├── 📄 Quantity.java
+  │   │                   │   └── 📄 QuantityModel.java
+  │   │                   │
+  │   │                   ├── 📁 repository
+  │   │                   │   ├── 📄 IQuantityMeasurementRepository.java
+  │   │                   │   └── 📄 QuantityMeasurementCacheRepository.java
+  │   │                   │
+  │   │                   ├── 📁 service
+  │   │                   │   ├── 📄 IQuantityMeasurementService.java
+  │   │                   │   └── 📄 QuantityMeasurementServiceImpl.java
+  │   │                   │
+  │   │                   ├── 📁 units
+  │   │                   │   ├── 📄 LengthUnit.java
+  │   │                   │   ├── 📄 TemperatureUnit.java
+  │   │                   │   ├── 📄 VolumeUnit.java
+  │   │                   │   └── 📄 WeightUnit.java
+  │   │                   │
   │   │                   └── 📄 QuantityMeasurementApp.java
   │   │
-  │   └── 📁 test
-  │       └── 📁 java
-  │           └── 📁 com
-  │               └── 📁 apps
-  │                   └── 📁 quantitymeasurement
-  │                       ├── 📄 ArchitecturalTest.java
-  │                       ├── 📄 BackwardCompatibilityTest.java
-  │                       ├── 📄 CentralizedArithmeticLogicTest.java
-  │                       ├── 📄 ConceptualValidationTest.java
-  │                       ├── 📄 QuantityAdditionTest.java
-  │                       ├── 📄 QuantityArithmeticTest.java
-  │                       ├── 📄 QuantityConversionTest.java
-  │                       ├── 📄 QuantityEqualityTest.java
-  │                       ├── 📄 TemperatureQuantityTest.java
-  │                       ├── 📄 WeightQuantityTest.java
-  │                       └── 📄 VolumeQuantityTest.java
+  │   ├── 📁 test
+  │   │   └── 📁 java
+  │   │       └── 📁 com
+  │   │           └── 📁 apps
+  │   │               └── 📁 quantitymeasurement
+  │   │                   ├── 📁 controller
+  │   │                   │     └── 📄 QuantityMeasurementControllerTest.java
+  │   │                   │
+  │   │                   ├── 📁 dto
+  │   │                   │   └── 📄 QuantityDTOTest.java
+  │   │                   │
+  │   │                   ├── 📁 entity
+  │   │                   │   └── 📄 QuantityMeasurementEntityTest.java
+  │   │                   │
+  │   │                   ├── 📁 exception
+  │   │                   │   └── 📄 QuantityMeasurementExceptionTest.java
+  │   │                   │
+  │   │                   ├── 📁 interfaces
+  │   │                   │   └── 📄 IMeasurableTest.java
+  │   │                   │
+  │   │                   ├── 📁 model
+  │   │                   │   ├── 📄 QuantityArithmeticTest.java
+  │   │                   │   ├── 📄 QuantityConversionTest.java
+  │   │                   │   ├── 📄 QuantityEqualityTest.java
+  │   │                   │   └── 📄 QuantityModelTest.java
+  │   │                   │
+  │   │                   ├── 📁 repository
+  │   │                   │   └── 📄 QuantityMeasurementCacheRepositoryTest.java
+  │   │                   │
+  │   │                   ├── 📁 service
+  │   │                   │   └── 📄 QuantityMeasurementServiceTest.java
+  │   │                   │
+  │   │                   └── 📁 units
+  │   │                       ├── 📄 LengthUnitTest.java
+  │   │                       ├── 📄 TemperatureUnitTest.java
+  │   │                       ├── 📄 VolumeUnitTest.java
+  │   │                       └── 📄 WeightUnitTest.java
+  │   │
+  │   └── 📁 data
+  │       └── 📄 quantity_measurement_repo.ser
   │
   ├── ⚙️ pom.xml
   ├── 🚫 .gitignore
@@ -135,7 +194,7 @@
 
 ### ⚙️ Development Approach
 
- > This project follows an incremental **Test-Driven Development (TDD)** workflow:
+> This project follows an incremental **Test-Driven Development (TDD)** workflow:
 
 - Tests are written first to define expected behaviour.
 - Implementation code is developed to satisfy the tests.
