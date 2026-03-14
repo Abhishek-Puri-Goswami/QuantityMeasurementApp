@@ -9,3 +9,6 @@ target/
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
+
+# --- Other files ---
+data/*.ser
