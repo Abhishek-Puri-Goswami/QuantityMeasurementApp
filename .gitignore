@@ -10,5 +10,33 @@ target/
 .DS_Store
 Thumbs.db
 
-# --- Other files ---
+# --- H2 Database Files ---
+data/*.mv.db
+data/*.trace.db
+
+# --- Serialized Cache Repository ---
 data/*.ser
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# --- VS Code ---
+.vscode/
+
+# --- Maven ---
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# --- Java ---
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# --- Environment / Secrets ---
+application-prod.properties
+*.env
