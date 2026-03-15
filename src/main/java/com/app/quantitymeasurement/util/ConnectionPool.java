@@ -78,7 +78,7 @@ public class ConnectionPool {
          * Load all database configuration values from application.properties.
          * Default values are provided for each setting in case they are absent.
          */
-        this.dbUrl        = config.getProperty("db.url",      "jdbc:h2:./quantitymeasurementdb;AUTO_SERVER=TRUE");
+        this.dbUrl        = config.getProperty("db.url",      "jdbc:h2:./data/quantitymeasurementdb;AUTO_SERVER=TRUE");
         this.dbUsername   = config.getProperty("db.username", "sa");
         this.dbPassword   = config.getProperty("db.password", "");
         this.driverClass  = config.getProperty("db.driver",   "org.h2.Driver");
