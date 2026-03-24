@@ -1,7 +1,8 @@
-package com.app.quantitymeasurement.model;
+package com.app.quantitymeasurement.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import com.app.quantitymeasurement.dto.QuantityDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

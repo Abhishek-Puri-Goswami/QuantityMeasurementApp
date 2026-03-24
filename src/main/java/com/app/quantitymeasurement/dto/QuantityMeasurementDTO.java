@@ -1,5 +1,6 @@
-package com.app.quantitymeasurement.model;
+package com.app.quantitymeasurement.dto;
 
+import com.app.quantitymeasurement.entity.QuantityMeasurementEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
