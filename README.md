@@ -97,7 +97,7 @@
   - Introduces `QuantityMeasurementApplication` as the **Spring Boot entry point** with `@SpringBootApplication` and `@OpenAPIDefinition` for application metadata.
   - **Replaces manual JDBC repositories** (`QuantityMeasurementDatabaseRepository`, `QuantityMeasurementCacheRepository`, `ApplicationConfig`, `ConnectionPool`) with **Spring Data JPA** — `QuantityMeasurementRepository` extending `JpaRepository<QuantityMeasurementEntity, Long>`.
   - `QuantityMeasurementRepository` defines derived-query methods: `findByOperation`, `findByThisMeasurementType`, `findByCreatedAtAfter`, `countByOperationAndErrorFalse`, `findByErrorTrue`, and a custom `@Query` method `findSuccessfulByOperation`.
-  - **Refactors the package layout** — all model classes moved from `entity` to `model` package to better reflect their role as application-wide data structures rather than database-only persistence objects.
+  - **Refactors the package layout** — introduces three distinct packages: `entity` for JPA-mapped database classes (`QuantityMeasurementEntity`), `dto` for API request/response objects (`QuantityDTO`, `QuantityInputDTO`, `QuantityMeasurementDTO`), and `model` for pure domain/business objects (`Quantity`, `QuantityModel`, `OperationType`).
   - **Refactors `QuantityDTO`** to include Bean Validation annotations (`@Data`, `@NotNull`, `@NotEmpty`, `@Pattern`, `@AssertTrue`) enforcing input integrity at the API boundary.
   - Introduces **`QuantityMeasurementDTO`** as a structured API response object with static factory methods: `fromEntity()`, `toEntity()`, `fromEntityList()`, and `toEntityList()` using the Java Stream API for efficient collection mapping.
   - Adds **`QuantityInputDTO`** to encapsulate the two-operand input structure accepted by all POST endpoints.
@@ -280,13 +280,17 @@ And update the credentials in `application-prod.properties`.
   │   │   │               │   ├── 📄 GlobalExceptionHandler.java     ← NEW (UC17)
   │   │   │               │   └── 📄 QuantityMeasurementException.java
   │   │   │               │
-  │   │   │               ├── 📁 model                               ← RENAMED from entity (UC17)
-  │   │   │               │   ├── 📄 OperationType.java              ← NEW (UC17)
-  │   │   │               │   ├── 📄 Quantity.java
+  │   │   │               ├── 📁 dto                                 ← NEW (UC17 refactor) API request/response objects
   │   │   │               │   ├── 📄 QuantityDTO.java
   │   │   │               │   ├── 📄 QuantityInputDTO.java           ← NEW (UC17)
-  │   │   │               │   ├── 📄 QuantityMeasurementDTO.java     ← NEW (UC17)
-  │   │   │               │   ├── 📄 QuantityMeasurementEntity.java
+  │   │   │               │   └── 📄 QuantityMeasurementDTO.java     ← NEW (UC17)
+  │   │   │               │
+  │   │   │               ├── 📁 entity                              ← NEW (UC17 refactor) JPA database-mapped classes
+  │   │   │               │   └── 📄 QuantityMeasurementEntity.java
+  │   │   │               │
+  │   │   │               ├── 📁 model                               ← NEW (UC17 refactor) domain/business objects
+  │   │   │               │   ├── 📄 OperationType.java              ← NEW (UC17)
+  │   │   │               │   ├── 📄 Quantity.java
   │   │   │               │   └── 📄 QuantityModel.java
   │   │   │               │
   │   │   │               ├── 📁 repository
@@ -324,12 +328,16 @@ And update the credentials in `application-prod.properties`.
   │       │               ├── 📁 integrationTests
   │       │               │   └── 📄 QuantityMeasurementApplicationTests.java  ← UPDATED (UC17)
   │       │               │
+  │       │               ├── 📁 dto
+  │       │               │   └── 📄 QuantityDTOTest.java
+  │       │               │
+  │       │               ├── 📁 entity
+  │       │               │   └── 📄 QuantityMeasurementEntityTest.java
+  │       │               │
   │       │               ├── 📁 model
   │       │               │   ├── 📄 QuantityArithmeticTest.java
   │       │               │   ├── 📄 QuantityConversionTest.java
-  │       │               │   ├── 📄 QuantityDTOTest.java
   │       │               │   ├── 📄 QuantityEqualityTest.java
-  │       │               │   ├── 📄 QuantityMeasurementEntityTest.java
   │       │               │   └── 📄 QuantityModelTest.java
   │       │               │
   │       │               ├── 📁 repository
