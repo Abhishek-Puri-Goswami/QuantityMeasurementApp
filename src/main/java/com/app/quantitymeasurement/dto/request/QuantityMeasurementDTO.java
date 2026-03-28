@@ -1,4 +1,4 @@
-package com.app.quantitymeasurement.dto;
+package com.app.quantitymeasurement.dto.request;
 
 import com.app.quantitymeasurement.entity.QuantityMeasurementEntity;
 import lombok.AllArgsConstructor;
