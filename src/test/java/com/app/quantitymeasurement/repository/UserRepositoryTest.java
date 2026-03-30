@@ -30,13 +30,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @DataJpaTest
 @ActiveProfiles("test")
-public class UserRepositoryTest {
+class UserRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         userRepository.deleteAll();
     }
 
@@ -45,7 +45,7 @@ public class UserRepositoryTest {
     // =========================================================================
 
     @Test
-    public void testFindByEmail_ExistingEmail_ReturnsUser() {
+    void testFindByEmail_ExistingEmail_ReturnsUser() {
         User saved = userRepository.save(localUser("alice@example.com", "Alice"));
 
         Optional<User> found = userRepository.findByEmail("alice@example.com");
@@ -56,13 +56,13 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByEmail_NonExistentEmail_ReturnsEmpty() {
+    void testFindByEmail_NonExistentEmail_ReturnsEmpty() {
         Optional<User> found = userRepository.findByEmail("nobody@example.com");
         assertFalse(found.isPresent());
     }
 
     @Test
-    public void testFindByEmail_IsCaseSensitive() {
+    void testFindByEmail_IsCaseSensitive() {
         userRepository.save(localUser("alice@example.com", "Alice"));
         // H2 and MySQL treat email as case-sensitive by default
         Optional<User> found = userRepository.findByEmail("ALICE@EXAMPLE.COM");
@@ -74,13 +74,13 @@ public class UserRepositoryTest {
     // =========================================================================
 
     @Test
-    public void testExistsByEmail_ExistingEmail_ReturnsTrue() {
+    void testExistsByEmail_ExistingEmail_ReturnsTrue() {
         userRepository.save(localUser("bob@example.com", "Bob"));
         assertTrue(userRepository.existsByEmail("bob@example.com"));
     }
 
     @Test
-    public void testExistsByEmail_NonExistentEmail_ReturnsFalse() {
+    void testExistsByEmail_NonExistentEmail_ReturnsFalse() {
         assertFalse(userRepository.existsByEmail("nobody@example.com"));
     }
 
@@ -89,7 +89,7 @@ public class UserRepositoryTest {
     // =========================================================================
 
     @Test
-    public void testFindByProviderAndProviderId_ExistingPair_ReturnsUser() {
+    void testFindByProviderAndProviderId_ExistingPair_ReturnsUser() {
         User google = User.builder()
             .email("carol@gmail.com")
             .name("Carol")
@@ -107,7 +107,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByProviderAndProviderId_WrongProvider_ReturnsEmpty() {
+    void testFindByProviderAndProviderId_WrongProvider_ReturnsEmpty() {
         User google = User.builder()
             .email("dan@gmail.com")
             .provider(AuthProvider.GOOGLE)
@@ -123,7 +123,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByProviderAndProviderId_WrongId_ReturnsEmpty() {
+    void testFindByProviderAndProviderId_WrongId_ReturnsEmpty() {
         User google = User.builder()
             .email("eve@gmail.com")
             .provider(AuthProvider.GOOGLE)
@@ -143,13 +143,13 @@ public class UserRepositoryTest {
     // =========================================================================
 
     @Test
-    public void testSave_LocalUser_CreatedAtIsSet() {
+    void testSave_LocalUser_CreatedAtIsSet() {
         User user = userRepository.save(localUser("f@example.com", "Frank"));
         assertNotNull(user.getCreatedAt());
     }
 
     @Test
-    public void testSave_DefaultRole_IsUser() {
+    void testSave_DefaultRole_IsUser() {
         User user = User.builder()
             .email("g@example.com")
             .provider(AuthProvider.LOCAL)
@@ -159,7 +159,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testSave_AdminRole_IsPersisted() {
+    void testSave_AdminRole_IsPersisted() {
         User admin = User.builder()
             .email("h@example.com")
             .provider(AuthProvider.LOCAL)
@@ -170,7 +170,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testEmailUniqueConstraint_DuplicateThrows() {
+    void testEmailUniqueConstraint_DuplicateThrows() {
         userRepository.save(localUser("dup@example.com", "First"));
         User duplicate = localUser("dup@example.com", "Second");
         assertThrows(Exception.class, () -> userRepository.saveAndFlush(duplicate));
@@ -182,7 +182,7 @@ public class UserRepositoryTest {
     // =========================================================================
 
     @Test
-    public void testFindByProviderAndProviderId_GithubUser_Found() {
+    void testFindByProviderAndProviderId_GithubUser_Found() {
         User github = githubUser("carol@github.com", "carol", "gh-id-123");
         userRepository.save(github);
 
@@ -195,7 +195,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByProviderAndProviderId_GithubVsGoogle_NotMixed() {
+    void testFindByProviderAndProviderId_GithubVsGoogle_NotMixed() {
         /*
          * A GitHub user and a Google user with different provider IDs should
          * never be confused even if they share the same numeric string ID.
@@ -216,7 +216,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByProviderAndProviderId_GithubWrongId_ReturnsEmpty() {
+    void testFindByProviderAndProviderId_GithubWrongId_ReturnsEmpty() {
         userRepository.save(githubUser("dave@github.com", "dave", "correct-gh-id"));
 
         java.util.Optional<User> found = userRepository
@@ -226,7 +226,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testSave_GithubUser_PersistsCorrectly() {
+    void testSave_GithubUser_PersistsCorrectly() {
         User github = githubUser("eve@github.com", "eve", "gh-eve-999");
         User saved = userRepository.save(github);
 

@@ -59,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class QuantityMeasurementApplicationTests {
+class QuantityMeasurementApplicationTests {
 
     /**
      * Injected local server port — dynamically assigned during tests to avoid port conflicts.
@@ -106,13 +106,13 @@ public class QuantityMeasurementApplicationTests {
      * This ensures test isolation — each test starts with a clean database state.
      */
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         baseUrl  = "http://localhost:" + port + "/api/v1/quantities";
         authUrl  = "http://localhost:" + port + "/api/v1/auth";
         repository.deleteAll();
         userRepository.deleteAll();
-        testToken = registerAndGetToken("test@example.com", "password123");
-        adminToken = registerAdminAndGetToken("admin@example.com", "password123");
+        testToken = registerAndGetToken("test@example.com", "Strong@123");
+        adminToken = registerAdminAndGetToken("admin@example.com", "Strong@123");
 
         feetDTO   = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
         inchesDTO = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCHES);
@@ -128,7 +128,7 @@ public class QuantityMeasurementApplicationTests {
      * If this test passes, the application wired up correctly.
      */
     @Test
-    public void testSpringBootApplicationStarts() {
+    void testSpringBootApplicationStarts() {
         /*
          * If this test method runs without throwing, the application context
          * started successfully and all beans were registered correctly.
@@ -146,7 +146,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies POST /compare with 1 FEET and 12 INCHES returns true (equal).
      */
     @Test
-    public void testRestEndpointCompareQuantities() {
+    void testRestEndpointCompareQuantities() {
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
 
         ResponseEntity<QuantityMeasurementDTO> response = 
@@ -169,7 +169,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies POST /compare with non-equal quantities returns false.
      */
     @Test
-    public void testRestEndpointCompareQuantities_NotEqual() {
+    void testRestEndpointCompareQuantities_NotEqual() {
         QuantityDTO twoFeet = new QuantityDTO(2.0, QuantityDTO.LengthUnit.FEET);
         QuantityInputDTO input = new QuantityInputDTO(twoFeet, inchesDTO, null);
 
@@ -194,7 +194,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies POST /convert converts 1 FEET to 12 INCHES correctly.
      */
     @Test
-    public void testRestEndpointConvertQuantities() {
+    void testRestEndpointConvertQuantities() {
         QuantityDTO targetDTO = new QuantityDTO(0.0, QuantityDTO.LengthUnit.INCHES);
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, targetDTO, null);
 
@@ -222,7 +222,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies POST /add with 1 FEET + 12 INCHES = 2 FEET.
      */
     @Test
-    public void testRestEndpointAddQuantities() {
+    void testRestEndpointAddQuantities() {
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
 
         ResponseEntity<QuantityMeasurementDTO> response = 
@@ -246,7 +246,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies POST /add with targetUnitDTO converts result to YARDS.
      */
     @Test
-    public void testRestEndpointAddQuantities_WithTargetUnit() {
+    void testRestEndpointAddQuantities_WithTargetUnit() {
         QuantityDTO yardsTarget = new QuantityDTO(0.0, QuantityDTO.LengthUnit.YARDS);
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, yardsTarget);
 
@@ -272,7 +272,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies POST /subtract with 1 FEET - 12 INCHES = 0 FEET.
      */
     @Test
-    public void testRestEndpointSubtractQuantities() {
+    void testRestEndpointSubtractQuantities() {
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
 
         ResponseEntity<QuantityMeasurementDTO> response = 
@@ -297,7 +297,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies POST /divide with 1 FEET / 1 FEET = 1.0.
      */
     @Test
-    public void testRestEndpointDivideQuantities() {
+    void testRestEndpointDivideQuantities() {
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, feetDTO, null);
 
         ResponseEntity<QuantityMeasurementDTO> response = 
@@ -322,7 +322,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies that invalid unit names trigger validation and return 400.
      */
     @Test
-    public void testRestEndpointInvalidInput_InvalidUnit_Returns400() {
+    void testRestEndpointInvalidInput_InvalidUnit_Returns400() {
         String badJson = "{"
             + "\"thisQuantityDTO\": {\"value\": 1.0, \"unit\": \"FOOT\", \"measurementType\": \"LengthUnit\"},"
             + "\"thatQuantityDTO\": {\"value\": 12.0, \"unit\": \"INCHE\", \"measurementType\": \"LengthUnit\"}"
@@ -351,7 +351,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies that adding a LengthUnit to a WeightUnit returns 400.
      */
     @Test
-    public void testRestEndpointIncompatibleTypes_Returns400() {
+    void testRestEndpointIncompatibleTypes_Returns400() {
         QuantityDTO kilogramDTO = new QuantityDTO(1.0, QuantityDTO.WeightUnit.KILOGRAM);
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, kilogramDTO, null);
 
@@ -377,7 +377,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies that after a compare operation, the history endpoint returns the record.
      */
     @Test
-    public void testGetOperationHistory_AfterCompare_ReturnsRecord() {
+    void testGetOperationHistory_AfterCompare_ReturnsRecord() {
         // First perform a compare
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
         restTemplate.exchange(baseUrl + "/compare", HttpMethod.POST, withToken(input, testToken), QuantityMeasurementDTO.class);
@@ -401,7 +401,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies that history by measurement type returns correct records.
      */
     @Test
-    public void testGetHistoryByType_AfterOperations_ReturnsMatchingRecords() {
+    void testGetHistoryByType_AfterOperations_ReturnsMatchingRecords() {
         // Perform two operations
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
         restTemplate.exchange(baseUrl + "/compare", HttpMethod.POST, withToken(input, testToken), QuantityMeasurementDTO.class);
@@ -424,7 +424,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies that failed operations are recorded in the error history.
      */
     @Test
-    public void testGetErrorHistory_AfterFailedOperation_ReturnsErrorRecord() {
+    void testGetErrorHistory_AfterFailedOperation_ReturnsErrorRecord() {
         // Trigger an error by adding incompatible types
         QuantityDTO kilogramDTO = new QuantityDTO(1.0, QuantityDTO.WeightUnit.KILOGRAM);
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, kilogramDTO, null);
@@ -458,7 +458,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies the count endpoint returns the number of successful compare operations.
      */
     @Test
-    public void testGetOperationCount_AfterCompare_ReturnsCorrectCount() {
+    void testGetOperationCount_AfterCompare_ReturnsCorrectCount() {
         // Perform two compare operations
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
         restTemplate.exchange(
@@ -495,7 +495,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies Spring Data JPA repository findByOperation() works correctly.
      */
     @Test
-    public void testJPARepositoryFindByOperation_ReturnsCorrectEntities() {
+    void testJPARepositoryFindByOperation_ReturnsCorrectEntities() {
         // Perform an add operation via REST (which saves to DB)
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
         restTemplate.exchange(baseUrl + "/add", HttpMethod.POST, withToken(input, testToken), QuantityMeasurementDTO.class);
@@ -511,7 +511,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies findByErrorTrue() returns only error records.
      */
     @Test
-    public void testJPARepositoryFindByIsErrorTrue_ReturnsErrorEntities() {
+    void testJPARepositoryFindByIsErrorTrue_ReturnsErrorEntities() {
         // First a successful operation
         QuantityInputDTO goodInput = new QuantityInputDTO(feetDTO, inchesDTO, null);
         restTemplate.exchange(baseUrl + "/compare", HttpMethod.POST, withToken(goodInput, testToken), QuantityMeasurementDTO.class);
@@ -531,7 +531,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies countByOperationAndErrorFalse() counts only successful operations.
      */
     @Test
-    public void testJPARepositoryCountByOperationAndIsErrorFalse() {
+    void testJPARepositoryCountByOperationAndIsErrorFalse() {
         // Two compare operations
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
         restTemplate.exchange(baseUrl + "/compare", HttpMethod.POST, withToken(input, testToken), QuantityMeasurementDTO.class);
@@ -550,7 +550,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies /actuator/health returns status UP.
      */
     @Test
-    public void testActuatorHealthEndpoint_ReturnsUp() {
+    void testActuatorHealthEndpoint_ReturnsUp() {
         ResponseEntity<Map> response = restTemplate.getForEntity(
             "http://localhost:" + port + "/actuator/health", Map.class);
 
@@ -568,7 +568,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies the H2 console page loads at /h2-console.
      */
     @Test
-    public void testH2ConsoleLaunches() {
+    void testH2ConsoleLaunches() {
         ResponseEntity<String> response = restTemplate.getForEntity(
             "http://localhost:" + port + "/h2-console", String.class);
 
@@ -589,7 +589,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies the Swagger UI HTML loads at /swagger-ui.html.
      */
     @Test
-    public void testSwaggerUILoads() {
+    void testSwaggerUILoads() {
         ResponseEntity<String> response = restTemplate.getForEntity(
             "http://localhost:" + port + "/swagger-ui.html", String.class);
 
@@ -601,7 +601,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies the OpenAPI JSON spec is available at /v3/api-docs.
      */
     @Test
-    public void testOpenAPIDocumentation_Returns200() {
+    void testOpenAPIDocumentation_Returns200() {
         ResponseEntity<String> response = restTemplate.getForEntity(
             "http://localhost:" + port + "/v3/api-docs", String.class);
 
@@ -619,7 +619,7 @@ public class QuantityMeasurementApplicationTests {
      * Verifies that all API responses use Content-Type application/json.
      */
     @Test
-    public void testContentNegotiation_ResponseIsJSON() {
+    void testContentNegotiation_ResponseIsJSON() {
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
 
         ResponseEntity<QuantityMeasurementDTO> response = 
@@ -644,7 +644,7 @@ public class QuantityMeasurementApplicationTests {
      * Starts a full scenario: compare, convert, add — verifies all are persisted.
      */
     @Test
-    public void testIntegrationTest_MultipleOperations_AllPersisted() {
+    void testIntegrationTest_MultipleOperations_AllPersisted() {
         QuantityInputDTO input = new QuantityInputDTO(feetDTO, inchesDTO, null);
 
         restTemplate.exchange(baseUrl + "/compare", HttpMethod.POST, withToken(input, testToken), QuantityMeasurementDTO.class);

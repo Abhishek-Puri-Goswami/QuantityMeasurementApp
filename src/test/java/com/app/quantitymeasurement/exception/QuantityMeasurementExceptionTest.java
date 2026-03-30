@@ -17,19 +17,19 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Abhishek Puri Goswami
  * @version 17.0
  */
-public class QuantityMeasurementExceptionTest {
+class QuantityMeasurementExceptionTest {
 
     // =========================================================================
     // CLASS CONTRACT
     // =========================================================================
 
     @Test
-    public void testExtendsRuntimeException() {
+    void testExtendsRuntimeException() {
         assertTrue(new QuantityMeasurementException("msg") instanceof RuntimeException);
     }
 
     @Test
-    public void testIsUnchecked_ExtendsRuntimeException() {
+    void testIsUnchecked_ExtendsRuntimeException() {
         // Verified via class hierarchy - not by instanceof on an instance
         assertTrue(RuntimeException.class.isAssignableFrom(
             QuantityMeasurementException.class));
@@ -43,21 +43,21 @@ public class QuantityMeasurementExceptionTest {
     // =========================================================================
 
     @Test
-    public void testConstructor_Message_StoresMessage() {
+    void testConstructor_Message_StoresMessage() {
         QuantityMeasurementException ex =
             new QuantityMeasurementException("Invalid unit provided");
         assertEquals("Invalid unit provided", ex.getMessage());
     }
 
     @Test
-    public void testConstructor_Message_CauseIsNull() {
+    void testConstructor_Message_CauseIsNull() {
         QuantityMeasurementException ex =
             new QuantityMeasurementException("some error");
         assertNull(ex.getCause());
     }
 
     @Test
-    public void testConstructor_EmptyMessage_Stored() {
+    void testConstructor_EmptyMessage_Stored() {
         QuantityMeasurementException ex = new QuantityMeasurementException("");
         assertEquals("", ex.getMessage());
     }
@@ -67,7 +67,7 @@ public class QuantityMeasurementExceptionTest {
     // =========================================================================
 
     @Test
-    public void testConstructor_MessageAndCause_StoresBoth() {
+    void testConstructor_MessageAndCause_StoresBoth() {
         Throwable cause = new IllegalArgumentException("root cause");
         QuantityMeasurementException ex =
             new QuantityMeasurementException("wrapper message", cause);
@@ -76,7 +76,7 @@ public class QuantityMeasurementExceptionTest {
     }
 
     @Test
-    public void testConstructor_MessageAndCause_CauseMessageAccessible() {
+    void testConstructor_MessageAndCause_CauseMessageAccessible() {
         Throwable cause = new ArithmeticException("division by zero");
         QuantityMeasurementException ex =
             new QuantityMeasurementException("arithmetic error", cause);
@@ -88,7 +88,7 @@ public class QuantityMeasurementExceptionTest {
     // =========================================================================
 
     @Test
-    public void testThrowAndCatch_MessageOnly() {
+    void testThrowAndCatch_MessageOnly() {
         QuantityMeasurementException caught = assertThrows(
             QuantityMeasurementException.class,
             () -> { throw new QuantityMeasurementException("test error"); }
@@ -97,7 +97,7 @@ public class QuantityMeasurementExceptionTest {
     }
 
     @Test
-    public void testThrowAndCatch_WithCause() {
+    void testThrowAndCatch_WithCause() {
         IllegalArgumentException root = new IllegalArgumentException("bad arg");
         QuantityMeasurementException caught = assertThrows(
             QuantityMeasurementException.class,
@@ -107,7 +107,7 @@ public class QuantityMeasurementExceptionTest {
     }
 
     @Test
-    public void testCaughtAsRuntimeException() {
+    void testCaughtAsRuntimeException() {
         // Confirms it can be caught as the parent type
         assertThrows(
             RuntimeException.class,

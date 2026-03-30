@@ -25,14 +25,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * @version 18.0
  * @since 18.0
  */
-public class UserPrincipalTest {
+class UserPrincipalTest {
 
     private User localUser;
     private User googleUser;
     private User githubUser;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         localUser = User.builder()
             .id(1L)
             .email("alice@example.com")
@@ -68,14 +68,14 @@ public class UserPrincipalTest {
     // =========================================================================
 
     @Test
-    public void testCreate_LocalUser_ReturnsPrincipal() {
+    void testCreate_LocalUser_ReturnsPrincipal() {
         UserPrincipal principal = UserPrincipal.create(localUser);
         assertNotNull(principal);
         assertEquals("alice@example.com", principal.getUsername());
     }
 
     @Test
-    public void testCreate_WithAttributes_StoresAttributes() {
+    void testCreate_WithAttributes_StoresAttributes() {
         Map<String, Object> attrs = Map.of("email", "bob@gmail.com", "name", "Bob");
         UserPrincipal principal = UserPrincipal.create(googleUser, attrs);
         assertNotNull(principal.getAttributes());
@@ -87,25 +87,25 @@ public class UserPrincipalTest {
     // =========================================================================
 
     @Test
-    public void testGetUsername_ReturnsEmail() {
+    void testGetUsername_ReturnsEmail() {
         UserPrincipal p = UserPrincipal.create(localUser);
         assertEquals("alice@example.com", p.getUsername());
     }
 
     @Test
-    public void testGetEmail_ReturnsEmail() {
+    void testGetEmail_ReturnsEmail() {
         UserPrincipal p = UserPrincipal.create(localUser);
         assertEquals("alice@example.com", p.getEmail());
     }
 
     @Test
-    public void testGetId_ReturnsDatabaseId() {
+    void testGetId_ReturnsDatabaseId() {
         UserPrincipal p = UserPrincipal.create(localUser);
         assertEquals(1L, p.getId());
     }
 
     @Test
-    public void testGetUser_ReturnsUnderlyingEntity() {
+    void testGetUser_ReturnsUnderlyingEntity() {
         UserPrincipal p = UserPrincipal.create(localUser);
         assertSame(localUser, p.getUser());
     }
@@ -115,7 +115,7 @@ public class UserPrincipalTest {
     // =========================================================================
 
     @Test
-    public void testGetAuthorities_UserRole_ReturnsRoleUser() {
+    void testGetAuthorities_UserRole_ReturnsRoleUser() {
         UserPrincipal p = UserPrincipal.create(localUser);
         Collection<? extends GrantedAuthority> authorities = p.getAuthorities();
         assertEquals(1, authorities.size());
@@ -123,7 +123,7 @@ public class UserPrincipalTest {
     }
 
     @Test
-    public void testGetAuthorities_AdminRole_ReturnsRoleAdmin() {
+    void testGetAuthorities_AdminRole_ReturnsRoleAdmin() {
         UserPrincipal p = UserPrincipal.create(googleUser);
         Collection<? extends GrantedAuthority> authorities = p.getAuthorities();
         assertEquals(1, authorities.size());
@@ -135,13 +135,13 @@ public class UserPrincipalTest {
     // =========================================================================
 
     @Test
-    public void testGetPassword_LocalUser_ReturnsBcryptHash() {
+    void testGetPassword_LocalUser_ReturnsBcryptHash() {
         UserPrincipal p = UserPrincipal.create(localUser);
         assertEquals("$2a$10$hashedPassword", p.getPassword());
     }
 
     @Test
-    public void testGetPassword_GoogleUser_ReturnsNull() {
+    void testGetPassword_GoogleUser_ReturnsNull() {
         UserPrincipal p = UserPrincipal.create(googleUser);
         assertNull(p.getPassword());
     }
@@ -151,22 +151,22 @@ public class UserPrincipalTest {
     // =========================================================================
 
     @Test
-    public void testIsAccountNonExpired_ReturnsTrue() {
+    void testIsAccountNonExpired_ReturnsTrue() {
         assertTrue(UserPrincipal.create(localUser).isAccountNonExpired());
     }
 
     @Test
-    public void testIsAccountNonLocked_ReturnsTrue() {
+    void testIsAccountNonLocked_ReturnsTrue() {
         assertTrue(UserPrincipal.create(localUser).isAccountNonLocked());
     }
 
     @Test
-    public void testIsCredentialsNonExpired_ReturnsTrue() {
+    void testIsCredentialsNonExpired_ReturnsTrue() {
         assertTrue(UserPrincipal.create(localUser).isCredentialsNonExpired());
     }
 
     @Test
-    public void testIsEnabled_ReturnsTrue() {
+    void testIsEnabled_ReturnsTrue() {
         assertTrue(UserPrincipal.create(localUser).isEnabled());
     }
 
@@ -175,7 +175,7 @@ public class UserPrincipalTest {
     // =========================================================================
 
     @Test
-    public void testGetName_ReturnsEmail() {
+    void testGetName_ReturnsEmail() {
         UserPrincipal p = UserPrincipal.create(googleUser, Map.of("email", "bob@gmail.com"));
         assertEquals("bob@gmail.com", p.getName());
     }
@@ -185,7 +185,7 @@ public class UserPrincipalTest {
     // =========================================================================
 
     @Test
-    public void testCreate_GitHubUser_WithAttributes_StoresAttributes() {
+    void testCreate_GitHubUser_WithAttributes_StoresAttributes() {
         /*
          * GitHub's attribute map uses different keys than Google.
          * 'id' is the numeric user ID (stable providerId), 'login' is the
@@ -209,7 +209,7 @@ public class UserPrincipalTest {
     }
 
     @Test
-    public void testGetPassword_GitHubUser_ReturnsNull() {
+    void testGetPassword_GitHubUser_ReturnsNull() {
         /*
          * GitHub OAuth2 accounts have no locally stored password — GitHub
          * manages credentials. The password field must be null.
@@ -219,7 +219,7 @@ public class UserPrincipalTest {
     }
 
     @Test
-    public void testGetAuthorities_GitHubUser_ReturnsRoleUser() {
+    void testGetAuthorities_GitHubUser_ReturnsRoleUser() {
         UserPrincipal p = UserPrincipal.create(githubUser);
         Collection<? extends GrantedAuthority> authorities = p.getAuthorities();
         assertEquals(1, authorities.size());
@@ -227,7 +227,7 @@ public class UserPrincipalTest {
     }
 
     @Test
-    public void testGetName_GitHubUser_ReturnsEmail() {
+    void testGetName_GitHubUser_ReturnsEmail() {
         /*
          * OAuth2User.getName() returns the email address for consistency
          * across all providers — it does not return the GitHub login/username.
@@ -239,7 +239,7 @@ public class UserPrincipalTest {
 
 
     @Test
-    public void testSetAttributes_UpdatesAttributes() {
+    void testSetAttributes_UpdatesAttributes() {
         UserPrincipal p = UserPrincipal.create(googleUser);
         assertNull(p.getAttributes());
 
