@@ -58,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class JwtTokenProvider {
 
+	private static final String ROLES = "roles";
 
     /*
      * -------------------------------------------------------------------------
@@ -103,7 +104,7 @@ public class JwtTokenProvider {
      */
     public String generateToken(Authentication authentication) {
         /*
-         * Retrieve the principal. For local logins this is a UserPrincipal;
+         * Retrieve the principal. For local logins this is a UserPrincipal
          * for OAuth2 logins the same type is returned by CustomOAuth2UserService.
          */
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
@@ -122,7 +123,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(userPrincipal.getUsername())   // JWT "sub" claim = email
-                .claim("roles", roles)                  // custom claim for role(s)
+                .claim(ROLES, roles)                  // custom claim for role(s)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSigningKey())               // HS256 via derived SecretKey
@@ -145,7 +146,7 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .subject(email)
-                .claim("roles", role)
+                .claim(ROLES, role)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSigningKey())
@@ -179,7 +180,7 @@ public class JwtTokenProvider {
      * @return the roles string (e.g., {@code "ROLE_USER"})
      */
     public String getRolesFromToken(String token) {
-        return parseClaims(token).get("roles", String.class);
+        return parseClaims(token).get(ROLES, String.class);
     }
 
     /*

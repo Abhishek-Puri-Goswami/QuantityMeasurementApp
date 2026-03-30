@@ -72,13 +72,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * -------------------------------------------------------------------------
      */
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
+    
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider,
+			CustomUserDetailsService customUserDetailsService) {
+		this.jwtTokenProvider = jwtTokenProvider;
+		this.customUserDetailsService = customUserDetailsService;
+	}
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
-
-    /*
+	/*
      * -------------------------------------------------------------------------
      * Core filter logic
      * -------------------------------------------------------------------------

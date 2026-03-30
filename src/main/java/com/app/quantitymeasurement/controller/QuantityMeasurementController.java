@@ -60,11 +60,13 @@ import java.util.List;
      description = "REST API for quantity measurement operations")
 public class QuantityMeasurementController {
 
+    private final IQuantityMeasurementService quantityMeasurementService;
+    
+    public QuantityMeasurementController(IQuantityMeasurementService quantityMeasurementService) {
+		this.quantityMeasurementService = quantityMeasurementService;
+	}
 
-    @Autowired
-    private IQuantityMeasurementService quantityMeasurementService;
-
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
     // POST — operation endpoints
     // -------------------------------------------------------------------------
 

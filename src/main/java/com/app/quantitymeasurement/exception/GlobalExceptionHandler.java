@@ -3,12 +3,14 @@ package com.app.quantitymeasurement.exception;
 import lombok.extern.slf4j.Slf4j;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -53,7 +55,9 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-
+	private static final String QUANTITY_MEASUREMENT_ERROR =
+	        "Quantity Measurement Error";
+	
     /**
      * Handles Bean Validation failures that arise when a {@code @Valid}-annotated
      * request body fails its constraints.
@@ -78,9 +82,36 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(buildErrorBody(
             HttpStatus.BAD_REQUEST.value(),
-            "Quantity Measurement Error",
+            QUANTITY_MEASUREMENT_ERROR,
             errorMessage,
             ex.getBindingResult().getObjectName()
+        ));
+    }
+
+    /**
+     * Handles constraint violations on {@code @RequestParam} and {@code @PathVariable}
+     * method parameters when the controller is annotated with {@code @Validated}.
+     *
+     * @param ex      the constraint violation exception
+     * @param request the current HTTP request
+     * @return {@code 400 Bad Request} with a structured validation error body
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolationException(
+            ConstraintViolationException ex,
+            HttpServletRequest request) {
+
+        String errorMessage = ex.getConstraintViolations().stream()
+            .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
+            .collect(Collectors.joining("; "));
+
+        log.warn("Constraint violation: " + errorMessage);
+
+        return ResponseEntity.badRequest().body(buildErrorBody(
+            HttpStatus.BAD_REQUEST.value(),
+            QUANTITY_MEASUREMENT_ERROR,
+            errorMessage,
+            request.getRequestURI()
         ));
     }
 
@@ -102,7 +133,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(buildErrorBody(
             HttpStatus.BAD_REQUEST.value(),
-            "Quantity Measurement Error",
+            QUANTITY_MEASUREMENT_ERROR,
             ex.getMessage(),
             request.getRequestURI()
         ));
@@ -125,8 +156,35 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(buildErrorBody(
             HttpStatus.BAD_REQUEST.value(),
-            "Quantity Measurement Error",
+            QUANTITY_MEASUREMENT_ERROR,
             ex.getMessage(),
+            request.getRequestURI()
+        ));
+    }
+
+    /**
+     * Handles {@link ResponseStatusException} thrown by service methods that
+     * use {@code throw new ResponseStatusException(HttpStatus.XXX, "reason")}.
+     *
+     * <p>Without this handler the catch-all {@link #handleGlobalException}
+     * would intercept it and return {@code 500} regardless of the intended
+     * status code.</p>
+     *
+     * @param ex      the response status exception carrying the intended HTTP status
+     * @param request the current HTTP request
+     * @return response with the status code embedded in the exception
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleResponseStatusException(
+            ResponseStatusException ex,
+            HttpServletRequest request) {
+
+        log.warn("ResponseStatusException: " + ex.getReason());
+
+        return ResponseEntity.status(ex.getStatusCode()).body(buildErrorBody(
+            ex.getStatusCode().value(),
+            ex.getReason(),
+            ex.getReason(),
             request.getRequestURI()
         ));
     }
