@@ -125,7 +125,11 @@
   - Activates full **Spring Security** with JWT, Google OAuth2, and GitHub OAuth2 authentication, secured REST endpoints, role-based authorization, and complete security-focused test coverage.
   - Introduces a `security` package containing `JwtTokenProvider`, `JwtAuthenticationFilter`, `JwtAuthenticationEntryPoint`, `JwtAccessDeniedHandler`, `CustomUserDetailsService`, `UserPrincipal`, `CustomOAuth2UserService`, `OAuth2AuthenticationSuccessHandler`, and `OAuth2AuthenticationFailureHandler`.
   - **JWT lifecycle** — `JwtTokenProvider` generates signed HS256 tokens from authenticated principals, extracts email and role claims, and validates tokens on every request; configured via `app.jwt.secret` (Base64-encoded) and `app.jwt.expiration-ms` in `application.properties`.
-  - **Local authentication** — `AuthController` (`/api/v1/auth`) exposes `POST /register` (BCrypt-hash password, persist `User`, return JWT), `POST /login` (verify credentials, return JWT), and `GET /me` (return profile of authenticated user).
+  - **Local authentication** — `AuthController` (`/api/v1/auth`) exposes `POST /register` (BCrypt-hash password, persist `User`, return JWT), `POST /login` (verify credentials, return JWT), `GET /me` (return profile of authenticated user), `PUT /forgotPassword/{email}` (reset password without prior authentication), and `PUT /resetPassword/{email}` (reset password while authenticated). All HTTP-handling concerns are kept in the controller; business logic is delegated to `AuthenticationService`.
+  - Introduces `AuthenticationService` as a dedicated service class encapsulating all authentication business logic — user registration, credential verification, JWT issuance, and password management — keeping `AuthController` thin and single-responsibility.
+  - Adds `EmailService` for async (`@Async`) SMTP email notifications on authentication events (registration, login, and password changes); configured via `spring.mail.*` properties and backed by `spring-boot-starter-mail`.
+  - Adds `ForgotPasswordRequest` DTO (with `@NotBlank`, `@Pattern` constraints) for the forgot/reset password request payload, and `MessageResponse` DTO as a lightweight wrapper for human-readable status messages returned by password-management endpoints.
+  - Introduces `CorsConfig` in the `config` package providing a centralised `CorsConfigurationSource` bean consumed by Spring Security's CORS filter; allowed origins are configurable per environment via `app.cors.allowed-origins` in profile-specific property files.
   - **Google OAuth2** — Spring Security's built-in OAuth2 login filter handles the Authorization Code flow (`/oauth2/authorization/google`); `CustomOAuth2UserService` resolves the Google profile to a local `User` (create-or-update), and `OAuth2AuthenticationSuccessHandler` issues a JWT redirect to the configured frontend URI.
   - **GitHub OAuth2** — identical flow at `/oauth2/authorization/github`; `CustomOAuth2UserService` dispatches on the `registrationId` and applies GitHub-specific attribute extraction (`id` → `providerId`, `login` as name fallback, `avatar_url` as image). GitHub's `email` field may be `null` when the user's primary email is private; the service rejects such logins with a descriptive error. Requires `read:user,user:email` scope and a GitHub OAuth App registered at https://github.com/settings/developers.
   - Introduces `User` JPA entity (table `app_user`) with fields: `email`, `name`, `password` (nullable for OAuth2), `provider` (`AuthProvider` enum: `LOCAL`/`GOOGLE`/`GITHUB`), `providerId`, `role` (`Role` enum: `USER`/`ADMIN`), `imageUrl`, and `createdAt` (set via `@PrePersist`).
@@ -139,7 +143,7 @@
   - Introduces new test classes validating authentication workflows:
 
     - `AuthControllerTest`
-      - Tests `/api/v1/auth/register`, `/login`, and `/me` endpoints using `@WebMvcTest`.
+      - Tests `/api/v1/auth/register`, `/login`, `/me`, `/forgotPassword`, and `/resetPassword` endpoints using `@WebMvcTest`.
       - Verifies request validation, JWT response structure, and authentication behaviour.
 
     - `JwtTokenProviderTest`
@@ -161,7 +165,17 @@
         - `AuthRequest`
         - `RegisterRequest`
         - `AuthResponse`
+        - `ForgotPasswordRequest`
+      - Verifies structure and accessor behaviour for `MessageResponse` (constructor, getter, setter).
       - Ensures email format, password constraints, and required fields are enforced.
+
+    - `AuthenticationServiceTest`
+      - Validates authentication business logic in `AuthenticationService`.
+      - Covers registration, login, JWT issuance, and password-management behaviour.
+
+    - `EmailServiceTest`
+      - Verifies async email dispatch for registration, login, and password-change events.
+      - Uses mocked `JavaMailSender` to assert correct email construction without SMTP interaction.
 
     - `CustomOAuth2UserServiceTest`
       - Tests OAuth2 login processing for **GOOGLE** and **GITHUB** providers.
@@ -185,8 +199,8 @@
   - Performs a comprehensive architectural and code-quality refactoring of the UC18 codebase to align with professional Java / Spring Boot industry conventions.
   - **Switches logging from `java.util.logging` (JUL) to SLF4J via Lombok's `@Slf4j`** across all main source files — eliminates every `Logger.getLogger(...)` field declaration, adds `@Slf4j` class annotation, and replaces all `logger.*()` call sites with the equivalent `log.*()` SLF4J calls.
   - **Restructures the `dto` package** into explicit `request` and `response` sub-packages:
-    - `dto/request/` — `AuthRequest`, `RegisterRequest`, `QuantityInputDTO`, `QuantityMeasurementDTO`
-    - `dto/response/` — `AuthResponse`, `QuantityDTO`
+    - `dto/request/` — `AuthRequest`, `RegisterRequest`, `ForgotPasswordRequest`, `QuantityInputDTO`, `QuantityMeasurementDTO`
+    - `dto/response/` — `AuthResponse`, `MessageResponse`, `QuantityDTO`
   - **Restructures the `security` package** into explicit `jwt` and `oauth2` sub-packages:
     - `security/jwt/` — `JwtTokenProvider`, `JwtAuthenticationFilter`, `JwtAuthenticationEntryPoint`, `JwtAccessDeniedHandler`
     - `security/oauth2/` — `CustomOAuth2UserService`, `OAuth2AuthenticationSuccessHandler`, `OAuth2AuthenticationFailureHandler`
@@ -212,6 +226,7 @@
 - **Spring Security OAuth2 Client (spring-boot-starter-oauth2-client)** — Google OAuth2 Authorization Code flow
 - **JJWT (io.jsonwebtoken)** — JWT generation, claims extraction, and HS256 signature validation 
 - **Spring Boot Validation (spring-boot-starter-validation)** — Bean Validation for request validation
+- **Spring Boot Mail (spring-boot-starter-mail)** — async SMTP email notifications for authentication events (registration, login, password changes)
 - **Spring Boot Actuator** — monitoring endpoints (`/actuator/health`, `/metrics`, etc.)
 
 #### 📄 API Documentation
@@ -379,6 +394,7 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 │   │   │               ├── 📄 QuantityMeasurementApplication.java
 │   │   │               │
 │   │   │               ├── 📁 config
+│   │   │               │   ├── 📄 CorsConfig.java                ← NEW (UC18)
 │   │   │               │   └── 📄 SecurityConfig.java              ← UPDATED (UC18)
 │   │   │               │
 │   │   │               ├── 📁 controller
@@ -389,11 +405,13 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 │   │   │               │   ├── 📁 request                         ← NEW (UC18)
 │   │   │               │   │   ├── 📄 AuthRequest.java            ← NEW (UC18)
 │   │   │               │   │   ├── 📄 RegisterRequest.java        ← NEW (UC18)
+│   │   │               │   │   ├── 📄 ForgotPasswordRequest.java  ← NEW (UC18)
 │   │   │               │   │   ├── 📄 QuantityInputDTO.java
 │   │   │               │   │   └── 📄 QuantityMeasurementDTO.java
 │   │   │               │   │
 │   │   │               │   └── 📁 response                        ← NEW (UC18)
 │   │   │               │       ├── 📄 AuthResponse.java           ← NEW (UC18)
+│   │   │               │       ├── 📄 MessageResponse.java        ← NEW (UC18)
 │   │   │               │       └── 📄 QuantityDTO.java
 │   │   │               │
 │   │   │               ├── 📁 entity
@@ -433,6 +451,8 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 │   │   │               │   └── 📄 UserPrincipal.java              ← NEW (UC18)
 │   │   │               │
 │   │   │               ├── 📁 service
+│   │   │               │   ├── 📄 AuthenticationService.java      ← NEW (UC18)
+│   │   │               │   ├── 📄 EmailService.java               ← NEW (UC18)
 │   │   │               │   ├── 📄 IQuantityMeasurementService.java
 │   │   │               │   └── 📄 QuantityMeasurementServiceImpl.java
 │   │   │               │
@@ -490,6 +510,8 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 │       │               │   └── 📄 CustomOAuth2UserServiceTest.java       ← NEW (UC18)
 │       │               │
 │       │               ├── 📁 service
+│       │               │   ├── 📄 AuthenticationServiceTest.java              ← NEW (UC18)
+│       │               │   ├── 📄 EmailServiceTest.java                       ← NEW (UC18)
 │       │               │   └── 📄 QuantityMeasurementServiceTest.java
 │       │               │
 │       │               └── 📁 unit
@@ -538,10 +560,15 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 > **New Authentication Domain Components**
 > - `User` entity → stores user identity, provider details, role, and profile metadata
 > - `UserRepository` → Spring Data JPA repository supporting lookup by email
+> - `AuthenticationService` → dedicated service class for authentication business logic (registration, login, JWT issuance, password management)
+> - `EmailService` → async SMTP email notifications for registration, login, and password-change events
+> - `CorsConfig` → centralised CORS filter configuration bean; allowed origins configurable per environment
 > - DTO layer additions:
 >   - `AuthRequest` → login request payload
 >   - `RegisterRequest` → user registration payload
 >   - `AuthResponse` → JWT authentication response
+>   - `ForgotPasswordRequest` → new/replacement password payload for forgot/reset password endpoints
+>   - `MessageResponse` → lightweight wrapper for human-readable status messages
 > - Authorization model additions (moved to `enums/` in UC18):
 >   - `Role` enum → defines USER and ADMIN roles
 >   - `AuthProvider` enum → distinguishes LOCAL, GOOGLE, and GITHUB authentication sources
@@ -549,12 +576,14 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 
 > **New Test Coverage (UC18)**
 > - Adds dedicated test classes validating authentication flow and security behaviour:
->   - `AuthControllerTest` → verifies register, login, and authenticated profile endpoints
+>   - `AuthControllerTest` → verifies register, login, authenticated profile, and password-management endpoints
+>   - `AuthenticationServiceTest` → validates authentication business logic (registration, login, JWT issuance, password management)
+>   - `EmailServiceTest` → verifies async email dispatch for authentication events using a mocked `JavaMailSender`
 >   - `JwtTokenProviderTest` → validates token creation, signature verification, and expiration handling
 >   - `CustomOAuth2UserServiceTest` → tests OAuth2 user processing logic for Google and GitHub providers
 >   - `UserPrincipalTest` → verifies correct mapping of User → UserDetails
 >   - `UserRepositoryTest` → validates repository queries for user lookup and existence checks
->   - `AuthDTOTest` → validates Bean Validation constraints on authentication DTOs
+>   - `AuthDTOTest` → validates Bean Validation constraints on authentication request DTOs (including `ForgotPasswordRequest`) and verifies `MessageResponse` structure/accessors
 >   - `UserRepositoryTest` → extended with GitHub provider tests: `findByProviderAndProviderId(GITHUB)`, provider isolation (GitHub vs Google with same numeric ID), null-name fallback, `createdAt` and `providerId` persistence
 >   - `UserTest` → extended with GitHub builder tests: full field population, null-name fallback to login username, `toString` safety
 >   - Updated integration and controller tests ensure compatibility between Spring Security, JPA, and REST endpoints
@@ -563,12 +592,15 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 
 > **UC18 – Refactoring Summary**
 > - **Logging:** all classes switched from `java.util.logging.Logger` to Lombok `@Slf4j`; no functional change, consistent log output
-> - **`dto` restructured:** request DTOs in `dto/request/`, response DTOs in `dto/response/`
+> - **`dto` restructured:** request DTOs in `dto/request/`, response DTOs in `dto/response/`; `ForgotPasswordRequest` and `MessageResponse` added for password-management endpoints
 > - **`security` restructured:** JWT classes in `security/jwt/`, OAuth2 classes in `security/oauth2/`
 > - **`enums` introduced:** `AuthProvider`, `Role`, `OperationType` extracted from `model/` into a dedicated `enums/` package
 > - **`integrationTests/` renamed** to `integration/`; `QuantityMeasurementServiceIntegrationTest` moved from `service/` to `integration/`
 > - **Profile-based config completed:** `application-dev.properties` and `application-test.properties` added alongside existing `application.properties` and `application-prod.properties`
-> - **`pom.xml`:** `${lombok.version}` property extracted; Lombok `@Slf4j` documented
+> - **`AuthenticationService`** introduced to hold authentication business logic, keeping `AuthController` thin
+> - **`EmailService`** added for async SMTP email notifications; `spring-boot-starter-mail` added to `pom.xml`
+> - **`CorsConfig`** added in `config/` package for centralised, environment-configurable CORS policy
+> - **`pom.xml`:** `${lombok.version}` property extracted; Lombok `@Slf4j` documented; `spring-boot-starter-mail` added
 > - **`.gitignore`:** duplicates removed; `application-prod.properties` and `.env` added to secrets exclusions
 
 ### ⚙️ Development Approach
