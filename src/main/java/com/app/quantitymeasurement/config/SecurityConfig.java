@@ -191,18 +191,14 @@ public class SecurityConfig {
              */
             .authorizeHttpRequests(auth -> auth
 
-                /* ---- PUBLIC: auth and OAuth2 ---- */
+                /* ---- PROTECTED: user profile (must come before the bulk permitAll) ---- */
         		.requestMatchers("/api/v1/auth/me").authenticated()
-                .requestMatchers("/oauth2/**").permitAll()
-                .requestMatchers("/login/oauth2/**").permitAll()
 
-                
                 /* ---- PUBLIC: auth, OAuth2, and public password endpoints ---- */
                 .requestMatchers(
                 		"/api/v1/auth/login",
                 		"/api/v1/auth/register",
-                		"/api/v1/auth/forgotPassword/**",  // no JWT needed — user is locked out
-                		"/api/v1/auth/oauth2/**",
+                		"/api/v1/auth/forgotPassword/**",
                 		"/oauth2/**",
                 		"/login/oauth2/**"
                 		).permitAll()
