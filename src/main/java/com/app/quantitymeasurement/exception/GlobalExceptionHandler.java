@@ -163,6 +163,29 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles {@link ArithmeticException} thrown by arithmetic operations
+     * (e.g., division by zero). Returns 400 Bad Request rather than 500.
+     *
+     * @param ex      the exception
+     * @param request the current HTTP request
+     * @return {@code 400 Bad Request} with a structured error body
+     */
+    @ExceptionHandler(ArithmeticException.class)
+    public ResponseEntity<Map<String, Object>> handleArithmeticException(
+            ArithmeticException ex,
+            HttpServletRequest request) {
+
+        log.warn("ArithmeticException: " + ex.getMessage());
+
+        return ResponseEntity.badRequest().body(buildErrorBody(
+            HttpStatus.BAD_REQUEST.value(),
+            QUANTITY_MEASUREMENT_ERROR,
+            ex.getMessage(),
+            request.getRequestURI()
+        ));
+    }
+
+    /**
      * Handles {@link ResponseStatusException} thrown by service methods that
      * use {@code throw new ResponseStatusException(HttpStatus.XXX, "reason")}.
      *
