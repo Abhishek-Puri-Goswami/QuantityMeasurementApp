@@ -79,7 +79,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	
 	public OAuth2AuthenticationSuccessHandler(
 	        JwtTokenProvider jwtTokenProvider,
-	        @Value("${app.oauth2.redirect-uri:http://localhost:8080/swagger-ui.html}")
+	        @Value("${app.oauth2.redirect-uri:http://localhost:3000/oauth2/callback}")
 	        String redirectUri) {
 
 	    this.jwtTokenProvider = jwtTokenProvider;
