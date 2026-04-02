@@ -26,27 +26,6 @@ import com.app.quantitymeasurement.exception.QuantityMeasurementException;
 import com.app.quantitymeasurement.repository.QuantityMeasurementRepository;
 import com.app.quantitymeasurement.service.QuantityMeasurementServiceImpl;
 
-/**
- * QuantityMeasurementServiceIntegrationTest
- *
- * Ports all 55 UC16 service test scenarios to the UC17 Spring service.
- * Tests call the service directly (compare, convert, add, subtract, divide)
- * and assert on the returned QuantityMeasurementDTO instead of raw values.
- *
- * All UC16 spec items preserved:
- * - Comparison across all categories (length, weight, volume, temperature)
- * - Conversion across all categories
- * - Addition (2-arg and 3-arg with target unit)
- * - Subtraction (2-arg and 3-arg)
- * - Division
- * - Exception handling: temperature arithmetic, cross-category, divide-by-zero
- * - End-to-end integration flows (all ops in sequence)
- * - Repository tracking: every operation is saved
- * - Scalability: existing ops produce same results after full suite run
- *
- * @author Abhishek Puri Goswami
- * @version 17.0
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class QuantityMeasurementServiceIntegrationTest {
@@ -70,37 +49,37 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testCompare_Length_FeetVsInches_Equal() {
-        assertTrue(Bool(service.compare(feet(2), inches(24))));
+        assertTrue(Bool(service.compare(feet(2), inches(24), null)));
     }
 
     @Test
     void testCompare_Length_FeetVsInches_NotEqual() {
-        assertFalse(Bool(service.compare(feet(1), inches(24))));
+        assertFalse(Bool(service.compare(feet(1), inches(24), null)));
     }
 
     @Test
     void testCompare_Length_YardVsFeet_Equal() {
-        assertTrue(Bool(service.compare(yards(1), feet(3))));
+        assertTrue(Bool(service.compare(yards(1), feet(3), null)));
     }
 
     @Test
     void testCompare_Weight_KilogramVsGram_Equal() {
-        assertTrue(Bool(service.compare(kg(1), gram(1000))));
+        assertTrue(Bool(service.compare(kg(1), gram(1000), null)));
     }
 
     @Test
     void testCompare_Volume_LitreVsMillilitre_Equal() {
-        assertTrue(Bool(service.compare(litre(1), ml(1000))));
+        assertTrue(Bool(service.compare(litre(1), ml(1000), null)));
     }
 
     @Test
     void testCompare_Temperature_CelsiusVsFahrenheit_Equal() {
-        assertTrue(Bool(service.compare(celsius(0), fahrenheit(32))));
+        assertTrue(Bool(service.compare(celsius(0), fahrenheit(32), null)));
     }
 
     @Test
     void testCompare_Temperature_100C_vs_212F_Equal() {
-        assertTrue(Bool(service.compare(celsius(100), fahrenheit(212))));
+        assertTrue(Bool(service.compare(celsius(100), fahrenheit(212), null)));
     }
 
     // =========================================================================
@@ -109,42 +88,42 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testConvert_Length_InchesToYards() {
-        QuantityMeasurementDTO r = service.convert(inches(24), yards(0));
+        QuantityMeasurementDTO r = service.convert(inches(24), yards(0), null);
         assertEquals("YARDS", r.getResultUnit());
         assertEquals(0.666667, r.getResultValue(), EPSILON);
     }
 
     @Test
     void testConvert_Length_FeetToInches() {
-        QuantityMeasurementDTO r = service.convert(feet(2), inches(0));
+        QuantityMeasurementDTO r = service.convert(feet(2), inches(0), null);
         assertEquals(24.0, r.getResultValue(), EPSILON);
         assertEquals("INCHES", r.getResultUnit());
     }
 
     @Test
     void testConvert_Weight_KilogramToPound() {
-        QuantityMeasurementDTO r = service.convert(kg(1), pound(0));
+        QuantityMeasurementDTO r = service.convert(kg(1), pound(0), null);
         assertEquals(2.204624, r.getResultValue(), EPSILON);
         assertEquals("POUND", r.getResultUnit());
     }
 
     @Test
     void testConvert_Volume_LitreToMillilitre() {
-        QuantityMeasurementDTO r = service.convert(litre(1), ml(0));
+        QuantityMeasurementDTO r = service.convert(litre(1), ml(0), null);
         assertEquals(1000.0, r.getResultValue(), EPSILON);
         assertEquals("MILLILITRE", r.getResultUnit());
     }
 
     @Test
     void testConvert_Temperature_CelsiusToFahrenheit() {
-        QuantityMeasurementDTO r = service.convert(celsius(100), fahrenheit(0));
+        QuantityMeasurementDTO r = service.convert(celsius(100), fahrenheit(0), null);
         assertEquals(212.0, r.getResultValue(), EPSILON);
         assertEquals("FAHRENHEIT", r.getResultUnit());
     }
 
     @Test
     void testConvert_Temperature_FahrenheitToCelsius() {
-        QuantityMeasurementDTO r = service.convert(fahrenheit(32), celsius(0));
+        QuantityMeasurementDTO r = service.convert(fahrenheit(32), celsius(0), null);
         assertEquals(0.0, r.getResultValue(), EPSILON);
         assertEquals("CELSIUS", r.getResultUnit());
     }
@@ -155,42 +134,42 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testAdd_Length_FeetPlusInches_DefaultUnit() {
-        QuantityMeasurementDTO r = service.add(feet(2), inches(24));
+        QuantityMeasurementDTO r = service.add(feet(2), inches(24), null);
         assertEquals(4.0, r.getResultValue(), EPSILON);
         assertEquals("FEET", r.getResultUnit());
     }
 
     @Test
     void testAdd_Length_FeetPlusInches_TargetYards() {
-        QuantityMeasurementDTO r = service.add(feet(2), inches(24), yards(0));
+        QuantityMeasurementDTO r = service.add(feet(2), inches(24), yards(0), null);
         assertEquals(1.333333, r.getResultValue(), EPSILON);
         assertEquals("YARDS", r.getResultUnit());
     }
 
     @Test
     void testAdd_Weight_KilogramPlusGram() {
-        QuantityMeasurementDTO r = service.add(kg(1), gram(1000));
+        QuantityMeasurementDTO r = service.add(kg(1), gram(1000), null);
         assertEquals(2.0, r.getResultValue(), EPSILON);
         assertEquals("KILOGRAM", r.getResultUnit());
     }
 
     @Test
     void testAdd_Volume_LitrePlusMillilitre() {
-        QuantityMeasurementDTO r = service.add(litre(1), ml(1000));
+        QuantityMeasurementDTO r = service.add(litre(1), ml(1000), null);
         assertEquals(2.0, r.getResultValue(), EPSILON);
         assertEquals("LITRE", r.getResultUnit());
     }
 
     @Test
     void testAdd_Length_InchPlusInch() {
-        QuantityMeasurementDTO r = service.add(inches(6), inches(6));
+        QuantityMeasurementDTO r = service.add(inches(6), inches(6), null);
         assertEquals(12.0, r.getResultValue(), EPSILON);
         assertEquals("INCHES", r.getResultUnit());
     }
 
     @Test
     void testAdd_Length_YardPlusFeet() {
-        QuantityMeasurementDTO r = service.add(yards(1), feet(3));
+        QuantityMeasurementDTO r = service.add(yards(1), feet(3), null);
         assertEquals(2.0, r.getResultValue(), EPSILON);
         assertEquals("YARDS", r.getResultUnit());
     }
@@ -201,28 +180,28 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testSubtract_Length_FeetMinusInches_DefaultUnit() {
-        QuantityMeasurementDTO r = service.subtract(feet(2), inches(24));
+        QuantityMeasurementDTO r = service.subtract(feet(2), inches(24), null);
         assertEquals(0.0, r.getResultValue(), EPSILON);
         assertEquals("FEET", r.getResultUnit());
     }
 
     @Test
     void testSubtract_Length_FeetMinusInches_ExplicitTarget() {
-        QuantityMeasurementDTO r = service.subtract(feet(10), inches(6), feet(0));
+        QuantityMeasurementDTO r = service.subtract(feet(10), inches(6), feet(0), null);
         assertEquals(9.5, r.getResultValue(), EPSILON);
         assertEquals("FEET", r.getResultUnit());
     }
 
     @Test
     void testSubtract_Weight_KilogramMinusGram() {
-        QuantityMeasurementDTO r = service.subtract(kg(2), gram(500));
+        QuantityMeasurementDTO r = service.subtract(kg(2), gram(500), null);
         assertEquals(1.5, r.getResultValue(), EPSILON);
         assertEquals("KILOGRAM", r.getResultUnit());
     }
 
     @Test
     void testSubtract_Volume_LitreMinusMillilitre() {
-        QuantityMeasurementDTO r = service.subtract(litre(2), ml(500));
+        QuantityMeasurementDTO r = service.subtract(litre(2), ml(500), null);
         assertEquals(1.5, r.getResultValue(), EPSILON);
         assertEquals("LITRE", r.getResultUnit());
     }
@@ -233,25 +212,25 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testDivide_Length_EqualQuantities_ReturnsOne() {
-        QuantityMeasurementDTO r = service.divide(feet(2), inches(24));
+        QuantityMeasurementDTO r = service.divide(feet(2), inches(24), null);
         assertEquals(1.0, r.getResultValue(), EPSILON);
     }
 
     @Test
     void testDivide_Length_FourFeetOverTwoFeet_ReturnsTwo() {
-        QuantityMeasurementDTO r = service.divide(feet(4), feet(2));
+        QuantityMeasurementDTO r = service.divide(feet(4), feet(2), null);
         assertEquals(2.0, r.getResultValue(), EPSILON);
     }
 
     @Test
     void testDivide_Weight_TwoKgOverOneKg_ReturnsTwo() {
-        QuantityMeasurementDTO r = service.divide(kg(2), kg(1));
+        QuantityMeasurementDTO r = service.divide(kg(2), kg(1), null);
         assertEquals(2.0, r.getResultValue(), EPSILON);
     }
 
     @Test
     void testDivide_Volume_TwoLitresOverOneLitre_ReturnsTwo() {
-        QuantityMeasurementDTO r = service.divide(litre(2), litre(1));
+        QuantityMeasurementDTO r = service.divide(litre(2), litre(1), null);
         assertEquals(2.0, r.getResultValue(), EPSILON);
     }
 
@@ -262,43 +241,43 @@ class QuantityMeasurementServiceIntegrationTest {
     @Test
     void testService_ExceptionHandling_DivideByZero_Throws() {
         assertThrows(ArithmeticException.class,
-                () -> service.divide(feet(1), inches(0)));
+                () -> service.divide(feet(1), inches(0), null));
     }
 
     @Test
     void testService_ExceptionHandling_Temperature_Add_Throws() {
         assertThrows(QuantityMeasurementException.class,
-                () -> service.add(celsius(100), fahrenheit(50)));
+                () -> service.add(celsius(100), fahrenheit(50), null));
     }
 
     @Test
     void testService_ExceptionHandling_Temperature_Subtract_Throws() {
         assertThrows(QuantityMeasurementException.class,
-                () -> service.subtract(celsius(100), fahrenheit(50)));
+                () -> service.subtract(celsius(100), fahrenheit(50), null));
     }
 
     @Test
     void testService_ExceptionHandling_Temperature_Divide_Throws() {
         assertThrows(QuantityMeasurementException.class,
-                () -> service.divide(celsius(100), celsius(50)));
+                () -> service.divide(celsius(100), celsius(50), null));
     }
 
     @Test
     void testService_ExceptionHandling_CrossCategory_Add_Throws() {
         assertThrows(QuantityMeasurementException.class,
-                () -> service.add(feet(1), kg(1)));
+                () -> service.add(feet(1), kg(1), null));
     }
 
     @Test
     void testService_ExceptionHandling_CrossCategory_Subtract_Throws() {
         assertThrows(QuantityMeasurementException.class,
-                () -> service.subtract(feet(1), kg(1)));
+                () -> service.subtract(feet(1), kg(1), null));
     }
 
     @Test
     void testService_ExceptionHandling_CrossCategory_Compare_Throws() {
         assertThrows(QuantityMeasurementException.class,
-                () -> service.compare(feet(1), kg(1)));
+                () -> service.compare(feet(1), kg(1), null));
     }
 
     // =========================================================================
@@ -307,41 +286,40 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testEntity_OperationType_Tracking_Compare() {
-        service.compare(feet(1), inches(12));
+        service.compare(feet(1), inches(12), null);
         verify(repository, times(1)).save(any(QuantityMeasurementEntity.class));
     }
 
     @Test
     void testEntity_OperationType_Tracking_Add() {
-        service.add(feet(1), inches(12));
+        service.add(feet(1), inches(12), null);
         verify(repository, times(1)).save(any(QuantityMeasurementEntity.class));
     }
 
     @Test
     void testEntity_OperationType_Tracking_Convert() {
-        service.convert(feet(1), inches(0));
+        service.convert(feet(1), inches(0), null);
         verify(repository, times(1)).save(any(QuantityMeasurementEntity.class));
     }
 
     @Test
     void testEntity_OperationType_Tracking_Subtract() {
-        service.subtract(feet(2), inches(24));
+        service.subtract(feet(2), inches(24), null);
         verify(repository, times(1)).save(any(QuantityMeasurementEntity.class));
     }
 
     @Test
     void testEntity_OperationType_Tracking_Divide() {
-        service.divide(feet(2), inches(24));
+        service.divide(feet(2), inches(24), null);
         verify(repository, times(1)).save(any(QuantityMeasurementEntity.class));
     }
 
     @Test
     void testEntity_ErrorRecord_SavedOnException() {
         try {
-            service.add(feet(1), kg(1));
+            service.add(feet(1), kg(1), null);
         } catch (Exception ignored) {
         }
-        // error entity should also be saved
         verify(repository, atLeastOnce()).save(any(QuantityMeasurementEntity.class));
     }
 
@@ -351,23 +329,23 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testIntegration_EndToEnd_LengthAddition() {
-        assertTrue(Bool(service.compare(feet(2), inches(24))));
-        assertEquals("YARDS", service.convert(inches(24), yards(0)).getResultUnit());
-        assertEquals(4.0, service.add(feet(2), inches(24)).getResultValue(), EPSILON);
-        assertEquals("YARDS", service.add(feet(2), inches(24), yards(0)).getResultUnit());
-        assertEquals(0.0, service.subtract(feet(2), inches(24)).getResultValue(), EPSILON);
-        assertEquals(1.0, service.divide(feet(2), inches(24)).getResultValue(), EPSILON);
+        assertTrue(Bool(service.compare(feet(2), inches(24), null)));
+        assertEquals("YARDS", service.convert(inches(24), yards(0), null).getResultUnit());
+        assertEquals(4.0, service.add(feet(2), inches(24), null).getResultValue(), EPSILON);
+        assertEquals("YARDS", service.add(feet(2), inches(24), yards(0), null).getResultUnit());
+        assertEquals(0.0, service.subtract(feet(2), inches(24), null).getResultValue(), EPSILON);
+        assertEquals(1.0, service.divide(feet(2), inches(24), null).getResultValue(), EPSILON);
     }
 
     @Test
     void testIntegration_EndToEnd_TemperatureAddition_IsRejected() {
         assertThrows(QuantityMeasurementException.class,
-                () -> service.add(celsius(100), celsius(50)));
+                () -> service.add(celsius(100), celsius(50), null));
     }
 
     @Test
     void testIntegration_EndToEnd_TemperatureConversion_Succeeds() {
-        QuantityMeasurementDTO r = service.convert(celsius(-40), fahrenheit(0));
+        QuantityMeasurementDTO r = service.convert(celsius(-40), fahrenheit(0), null);
         assertEquals(-40.0, r.getResultValue(), EPSILON);
         assertEquals("FAHRENHEIT", r.getResultUnit());
     }
@@ -378,22 +356,22 @@ class QuantityMeasurementServiceIntegrationTest {
 
     @Test
     void testService_AllUnitImplementations_Convert() {
-        assertEquals("INCHES", service.convert(feet(1), inches(0)).getResultUnit());
-        assertEquals("GRAM", service.convert(kg(1), gram(0)).getResultUnit());
-        assertEquals("MILLILITRE", service.convert(litre(1), ml(0)).getResultUnit());
-        assertEquals("FAHRENHEIT", service.convert(celsius(100), fahrenheit(0)).getResultUnit());
+        assertEquals("INCHES", service.convert(feet(1), inches(0), null).getResultUnit());
+        assertEquals("GRAM", service.convert(kg(1), gram(0), null).getResultUnit());
+        assertEquals("MILLILITRE", service.convert(litre(1), ml(0), null).getResultUnit());
+        assertEquals("FAHRENHEIT", service.convert(celsius(100), fahrenheit(0), null).getResultUnit());
     }
 
     @Test
     void testScalability_ExistingOperations_ProduceSameResults_AfterFullSuiteRun() {
-        assertTrue(Bool(service.compare(feet(2), inches(24))));
-        assertEquals(4.0, service.add(feet(2), inches(24)).getResultValue(), EPSILON);
-        assertEquals(0.0, service.subtract(feet(2), inches(24)).getResultValue(), EPSILON);
-        assertEquals(1.0, service.divide(feet(2), inches(24)).getResultValue(), EPSILON);
+        assertTrue(Bool(service.compare(feet(2), inches(24), null)));
+        assertEquals(4.0, service.add(feet(2), inches(24), null).getResultValue(), EPSILON);
+        assertEquals(0.0, service.subtract(feet(2), inches(24), null).getResultValue(), EPSILON);
+        assertEquals(1.0, service.divide(feet(2), inches(24), null).getResultValue(), EPSILON);
     }
 
     // =========================================================================
-    // Helpers — boolean extraction and DTO factory shorthands
+    // Helpers
     // =========================================================================
 
     private boolean Bool(QuantityMeasurementDTO dto) {
