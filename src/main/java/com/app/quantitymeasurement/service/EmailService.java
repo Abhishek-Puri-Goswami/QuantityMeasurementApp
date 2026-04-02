@@ -1,170 +1,76 @@
 package com.app.quantitymeasurement.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-/**
- * EmailService
- *
- * Sends notification emails for authentication events (registration, login,
- * password changes). All send methods are {@code @Async} so they never block
- * the HTTP response — a slow or unavailable SMTP server will not affect the
- * API caller.
- *
- * <p>SMTP credentials and host are configured in {@code application.properties}
- * via the {@code spring.mail.*} namespace. In production, inject them as
- * environment variables rather than hardcoding them.</p>
- *
- * @author UC19
- * @version 19.0
- */
 @Slf4j
 @Service
 public class EmailService {
-
-	private final JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
     private final String fromAddress;
 
-    public EmailService(
-            JavaMailSender mailSender,
-            @Value("${spring.mail.username}") String fromAddress) {
-
+    public EmailService(JavaMailSender mailSender, @Value("${spring.mail.username}") String fromAddress) {
         this.mailSender = mailSender;
         this.fromAddress = fromAddress;
     }
 
-    // -------------------------------------------------------------------------
-    // Registration notification
-    // -------------------------------------------------------------------------
+    @Async
+    public void sendOtpEmail(String toEmail, String otp) {
+        try {
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setFrom(fromAddress); m.setTo(toEmail);
+            m.setSubject("Your Verification Code - Quantity Measurement");
+            m.setText("Hi,\n\nYour verification code is: " + otp + "\n\nThis code expires in 5 minutes.\n\nRegards,\nQuantity Measurement Team");
+            mailSender.send(m);
+            log.info("OTP email sent to {}", toEmail);
+        } catch (Exception ex) { log.error("Failed to send OTP email to {}: {}", toEmail, ex.getMessage()); }
+    }
 
-    /**
-     * Sends a welcome email to a newly registered user.
-     *
-     * @param toEmail   the recipient's email address
-     * @param userName  the user's display name
-     */
     @Async
     public void sendRegistrationEmail(String toEmail, String userName) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromAddress);
-            message.setTo(toEmail);
-            message.setSubject("Welcome to Quantity Measurement App!");
-            message.setText(
-                "Hi " + userName + ",\n\n" +
-                "Your account has been created successfully.\n\n" +
-                "You can now log in and start measuring quantities.\n\n" +
-                "Regards,\nQuantity Measurement Team"
-            );
-            mailSender.send(message);
-            log.info("Registration email sent to {}", toEmail);
-        } catch (Exception ex) {
-            log.error("Failed to send registration email to {}: {}", toEmail, ex.getMessage());
-        }
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setFrom(fromAddress); m.setTo(toEmail);
+            m.setSubject("Welcome to Quantity Measurement App!");
+            m.setText("Hi " + userName + ",\n\nYour account has been created successfully.\n\nRegards,\nQuantity Measurement Team");
+            mailSender.send(m);
+        } catch (Exception ex) { log.error("Failed to send registration email to {}: {}", toEmail, ex.getMessage()); }
     }
 
-    // -------------------------------------------------------------------------
-    // Login notification
-    // -------------------------------------------------------------------------
-
-    /**
-     * Sends a login-alert email to a user who has just authenticated.
-     *
-     * @param toEmail  the recipient's email address
-     */
     @Async
     public void sendLoginNotificationEmail(String toEmail) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromAddress);
-            message.setTo(toEmail);
-            message.setSubject("New login to your Quantity Measurement account");
-            message.setText("""
-                    Hi,
-
-                    We noticed a new login to your account.
-
-                    If this was you, no action is needed.
-                    If you did not log in, please reset your password immediately.
-
-                    Regards,
-                    Quantity Measurement Team
-                    """);
-            mailSender.send(message);
-            log.info("Login notification email sent to {}", toEmail);
-        } catch (Exception ex) {
-            log.error("Failed to send login notification to {}: {}", toEmail, ex.getMessage());
-        }
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setFrom(fromAddress); m.setTo(toEmail);
+            m.setSubject("New login to your Quantity Measurement account");
+            m.setText("Hi,\n\nWe noticed a new login to your account.\n\nIf this was not you, please reset your password.\n\nRegards,\nQuantity Measurement Team");
+            mailSender.send(m);
+        } catch (Exception ex) { log.error("Failed to send login email to {}: {}", toEmail, ex.getMessage()); }
     }
 
-    // -------------------------------------------------------------------------
-    // Forgot password notification
-    // -------------------------------------------------------------------------
-
-    /**
-     * Sends a confirmation email after a forgotten-password reset.
-     *
-     * @param toEmail  the recipient's email address
-     */
     @Async
     public void sendForgotPasswordEmail(String toEmail) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromAddress);
-            message.setTo(toEmail);
-            message.setSubject("Your password has been changed");
-            message.setText("""
-                    Hi,
-
-                    Your password has been changed successfully.
-
-                    If you did not request this change, please contact support immediately.
-
-                    Regards,
-                    Quantity Measurement Team
-                    """);
-            mailSender.send(message);
-            log.info("Forgot-password confirmation email sent to {}", toEmail);
-        } catch (Exception ex) {
-            log.error("Failed to send forgot-password email to {}: {}", toEmail, ex.getMessage());
-        }
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setFrom(fromAddress); m.setTo(toEmail);
+            m.setSubject("Your password has been changed");
+            m.setText("Hi,\n\nYour password has been changed successfully.\n\nRegards,\nQuantity Measurement Team");
+            mailSender.send(m);
+        } catch (Exception ex) { log.error("Failed to send forgot-password email to {}: {}", toEmail, ex.getMessage()); }
     }
 
-    // -------------------------------------------------------------------------
-    // Reset password notification
-    // -------------------------------------------------------------------------
-
-    /**
-     * Sends a confirmation email after a logged-in user resets their password.
-     *
-     * @param toEmail  the recipient's email address
-     */
     @Async
     public void sendPasswordResetEmail(String toEmail) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromAddress);
-            message.setTo(toEmail);
-            message.setSubject("Password reset successfully");
-            message.setText("""
-                    Hi,
-
-                    Your password has been reset successfully.
-
-                    If you did not do this, please contact support immediately.
-
-                    Regards,
-                    Quantity Measurement Team
-                    """);
-            mailSender.send(message);
-            log.info("Password-reset confirmation email sent to {}", toEmail);
-        } catch (Exception ex) {
-            log.error("Failed to send password-reset email to {}: {}", toEmail, ex.getMessage());
-        }
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setFrom(fromAddress); m.setTo(toEmail);
+            m.setSubject("Password reset successfully");
+            m.setText("Hi,\n\nYour password has been reset successfully.\n\nRegards,\nQuantity Measurement Team");
+            mailSender.send(m);
+        } catch (Exception ex) { log.error("Failed to send password-reset email to {}: {}", toEmail, ex.getMessage()); }
     }
 }
