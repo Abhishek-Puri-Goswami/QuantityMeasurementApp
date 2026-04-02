@@ -10,8 +10,6 @@
 
 ### ✅ Implemented Features
 
-> _Features will be added here as Use Cases are implemented._
-
 - 🧩 **UC1 – Feet Equality :**
   - Implements value-based equality for feet measurements using an overridden `equals()` method.
   - Establishes object equality semantics as the foundation for future unit comparisons.
@@ -265,6 +263,12 @@ mvn spring-boot:run
 mvn clean test
 ```
 
+- Generate HTML test report (output: `target/site/surefire-report.html`):
+
+```
+mvn surefire-report:report
+```
+
 - Run specific test class:
 
 ```
@@ -285,7 +289,25 @@ java -jar target/quantity-measurement-app-0.0.1-SNAPSHOT.jar
 
 Once the application starts:
 
-- **API Base URL**
+- **Auth API Base URL**
+
+```
+http://localhost:8080/api/v1/auth
+```
+
+Key auth endpoints:
+
+| Method | Endpoint | Auth required | Purpose |
+|--------|----------|---------------|---------|
+| POST | `/register` | No | Register and receive JWT |
+| POST | `/login` | No | Login and receive JWT |
+| GET | `/me` | Yes (JWT) | Get current user profile |
+| POST | `/otp/send` | No | Send 6-digit OTP to email (UC19) |
+| POST | `/otp/verify` | No | Verify OTP code (UC19) |
+| PUT | `/forgotPassword/{email}` | No (OTP verified) | Reset password after OTP gate (UC19) |
+| PUT | `/resetPassword/{email}` | Yes (JWT) | Change password while logged in |
+
+- **Quantities API Base URL**
 
 ```
 http://localhost:8080/api/v1/quantities
@@ -378,7 +400,7 @@ To switch to **MySQL in production**, activate the prod profile:
 java -jar target/quantity-measurement-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
-And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `JWT_EXPIRATION_MS`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OAUTH2_REDIRECT_URI`) via your deployment environment or a `.env` file (never committed to VCS).
+And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `JWT_EXPIRATION_MS`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OAUTH2_REDIRECT_URI`, `MAIL_USERNAME`, `MAIL_PASSWORD`) via your deployment environment or a `.env` file (never committed to VCS).
 
 ### 📂 Project Structure
 
@@ -406,6 +428,7 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 │   │   │               │   │   ├── 📄 AuthRequest.java            ← NEW (UC18)
 │   │   │               │   │   ├── 📄 RegisterRequest.java        ← NEW (UC18)
 │   │   │               │   │   ├── 📄 ForgotPasswordRequest.java  ← NEW (UC18)
+│   │   │               │   │   ├── 📄 OtpRequest.java             ← NEW (UC19)
 │   │   │               │   │   ├── 📄 QuantityInputDTO.java
 │   │   │               │   │   └── 📄 QuantityMeasurementDTO.java
 │   │   │               │   │
@@ -416,6 +439,7 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 │   │   │               │
 │   │   │               ├── 📁 entity
 │   │   │               │   ├── 📄 QuantityMeasurementEntity.java
+│   │   │               │   ├── 📄 OtpToken.java                   ← NEW (UC19)
 │   │   │               │   └── 📄 User.java                       ← NEW (UC18)
 │   │   │               │
 │   │   │               ├── 📁 enums                               ← NEW (UC18)
@@ -433,6 +457,7 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 │   │   │               │
 │   │   │               ├── 📁 repository
 │   │   │               │   ├── 📄 QuantityMeasurementRepository.java
+│   │   │               │   ├── 📄 OtpTokenRepository.java         ← NEW (UC19)
 │   │   │               │   └── 📄 UserRepository.java             ← NEW (UC18)
 │   │   │               │
 │   │   │               ├── 📁 security
@@ -532,8 +557,6 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 
 > **Note on UC17 → UC18 changes:**
 > The permissive `SecurityConfig` stub introduced in UC17 was fully replaced in UC18 with a **production-ready stateless Spring Security configuration** supporting **JWT authentication and Google OAuth2 login**.  
-> This builds on top of UC18 with a **structural and code-quality refactoring** — no API changes, only improved package organisation, SLF4J logging, and profile-based configuration.
- The permissive `SecurityConfig` stub introduced in UC17 has been fully replaced with a **production-ready stateless Spring Security configuration** supporting **JWT authentication and Google OAuth2 login**.  
 > All existing UC17 functionality remains intact; UC18 extends the architecture with authentication, authorization, and security-focused validation layers.
 
 > **Updated Components**
@@ -600,6 +623,23 @@ And supply all required environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASS
 > - **`CorsConfig`** added in `config/` package for centralised, environment-configurable CORS policy
 > - **`pom.xml`:** `${lombok.version}` property extracted; Lombok `@Slf4j` documented; `spring-boot-starter-mail` added
 > - **`.gitignore`:** duplicates removed; `application-prod.properties` and `.env` added to secrets exclusions
+
+- 🧩 **UC19 – OTP-Based Email Verification for Password Reset :**
+  - Replaces the direct forgot-password flow from UC18 with a **secure two-step OTP verification gate** before any unauthenticated password reset is permitted.
+  - Introduces `OtpToken` JPA entity (table `otp_token`) with fields: `email`, `otpHash` (BCrypt-hashed six-digit code), `expiresAt` (5-minute TTL), `attempts` (max 5 before lockout), `verified` flag, and `createdAt` (set via `@PrePersist`). Expiry and lockout are enforced via `isExpired()` and `isLockedOut()` helper methods on the entity.
+  - Adds `OtpTokenRepository` (Spring Data JPA) with four derived-query methods: `findTopByEmailAndVerifiedFalseOrderByCreatedAtDesc`, `findTopByEmailAndVerifiedTrueOrderByCreatedAtDesc`, `deleteAllByEmail`, and `countByEmailAndCreatedAtAfter` (used for rate limiting).
+  - Introduces `OtpRequest` DTO with `@NotBlank` + `@Email` constraints on `email` and an optional `otp` field — shared by both send and verify endpoints.
+  - **`POST /api/v1/auth/otp/send`** — generates a cryptographically secure six-digit code via `SecureRandom`, BCrypt-hashes it, persists an `OtpToken`, and dispatches it asynchronously via `EmailService.sendOtpEmail()`. Returns a neutral message regardless of whether the email exists (prevents user enumeration). Rate-limited to **5 requests per hour** per email address.
+  - **`POST /api/v1/auth/otp/verify`** — looks up the most recent unverified token for the email, checks expiry and lockout, matches the submitted code against the stored hash via `passwordEncoder.matches()`, increments the `attempts` counter on failure (with remaining-attempts feedback), and marks the token `verified = true` on success.
+  - **`PUT /api/v1/auth/forgotPassword/{email}`** — now requires a valid verified `OtpToken` to exist for the email (found via `findTopByEmailAndVerifiedTrueOrderByCreatedAtDesc`) and enforces a **10-minute post-verification window**; rejects the request with `403 FORBIDDEN` if no verified token is present or the session has expired. On success, updates the password, deletes all OTP records for the email, and sends a confirmation email.
+  - Both OTP endpoints are added to the **public permit-all** list in `SecurityConfig` (`/api/v1/auth/otp/**`), requiring no authentication to call.
+  - `EmailService` extended with `sendOtpEmail(String toEmail, String otp)` — sends a formatted plain-text email containing the six-digit code and a 5-minute expiry notice.
+  - `AuthenticationService` updated: `sendOtp()` and `verifyOtp()` methods added; `forgotPassword()` refactored to enforce the verified-OTP gate and clean up tokens on success.
+  - **New test coverage:**
+    - `AuthenticationServiceTest` — extended with: `testSendOtp_ExistingUser_ReturnsSuccess`, `testSendOtp_RateLimited_ThrowsTooManyRequests`, `testVerifyOtp_CorrectCode_MarksVerified`, `testForgotPassword_WithVerifiedOtp_ReturnsSuccess`, `testForgotPassword_WithoutVerifiedOtp_ThrowsForbidden`, `testForgotPassword_WithExpiredVerificationSession_ThrowsForbidden`.
+    - `AuthControllerTest` — extended with: `testSendOtp_ExistingUser_Returns200`, `testForgotPassword_WithVerifiedOtp_Returns200`, `testForgotPassword_WithoutVerifiedOtp_Returns403`; uses a `createVerifiedOtp()` helper that seeds a verified `OtpToken` directly into the repository for integration-test setup.
+    - `EmailServiceTest` — extended with `sendOtpEmail` dispatch verification using a mocked `JavaMailSender`.
+  - All existing UC1–UC18 functionality, tests, and API contracts are fully preserved.
 
 ### ⚙️ Development Approach
 
