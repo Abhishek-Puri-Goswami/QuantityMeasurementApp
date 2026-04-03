@@ -213,6 +213,74 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles cases where no matching endpoint or static resource is found
+     * for the incoming request.
+     *
+     * <p>This typically occurs when:
+     * <ul>
+     *   <li>The client requests an invalid URL (no controller mapping exists).</li>
+     *   <li>The browser automatically requests resources such as {@code /favicon.ico}
+     *       or {@code /.well-known/...} which are not present in the application.</li>
+     * </ul>
+     *
+     * <p>Without this handler, such exceptions would be caught by the generic
+     * {@link #handleGlobalException} method and incorrectly returned as
+     * {@code 500 Internal Server Error}. Instead, this handler maps them
+     * to {@code 404 Not Found}.</p>
+     *
+     * @param ex      the exception indicating resource not found
+     * @param request the current HTTP request
+     * @return {@code 404 Not Found} with a structured error body
+     */
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoResourceFoundException(
+            Exception ex,
+            HttpServletRequest request) {
+
+        log.warn("Resource not found: {}", request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildErrorBody(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                "Resource not found",
+                request.getRequestURI()
+        ));
+    }
+    
+    /**
+     * Handles cases where the HTTP method used in the request is not supported
+     * by the targeted endpoint.
+     *
+     * <p>For example:
+     * <ul>
+     *   <li>Sending a {@code GET} request to an endpoint that only supports {@code POST}.</li>
+     * </ul>
+     *
+     * <p>Without this handler, such exceptions would be caught by the generic
+     * {@link #handleGlobalException} method and incorrectly returned as
+     * {@code 500 Internal Server Error}. Instead, this handler maps them
+     * to {@code 405 Method Not Allowed}.</p>
+     *
+     * @param ex      the exception indicating unsupported HTTP method
+     * @param request the current HTTP request
+     * @return {@code 405 Method Not Allowed} with a structured error body
+     */
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodNotSupportedException(
+            org.springframework.web.HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest request) {
+
+        log.warn("Method not allowed: {} on {}", ex.getMethod(), request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(buildErrorBody(
+                HttpStatus.METHOD_NOT_ALLOWED.value(),
+                "Method Not Allowed",
+                ex.getMessage(),
+                request.getRequestURI()
+        ));
+    }
+    
+    /**
      * Catch-all handler for any exception not covered by a more specific handler above.
      * Ensures that unhandled errors always produce a structured response rather than
      * an empty body or raw stack trace.
@@ -226,7 +294,7 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request) {
 
-        log.error("Unhandled exception: " + ex.getMessage());
+    	log.error("Unhandled exception", ex);
 
         return ResponseEntity.internalServerError().body(buildErrorBody(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
