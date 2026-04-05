@@ -1,5 +1,6 @@
 # Build output
 target/
+**/target/
 
 # IDE metadata — Eclipse / STS
 .settings/
@@ -34,3 +35,23 @@ data/*.ser
 
 # Environment / secrets — never commit real credentials
 .env
+.env.*
+!.env.example
+
+# Local profile/property overrides (branch-specific/local runs)
+**/application-local.properties
+**/application-*.local.properties
+**/application-secret.properties
+
+# Runtime files
+logs/
+**/logs/
+*.out
+*.pid
+hs_err_pid*
+replay_pid*
+
+# Merge/editor leftovers
+*.orig
+*.rej
+*.swp
